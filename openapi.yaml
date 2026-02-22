@@ -1,0 +1,2943 @@
+openapi: 3.1.0
+info:
+  title: hms API
+  description: RESTful API for Hotel Management System with cookie-based authentication
+  contact:
+    name: Sohraa Team
+    url: https://sohraa.com
+    email: support@sohraa.com
+  license:
+    name: Proprietary
+    url: https://sohraa.com/license
+  version: 1.0.0
+servers:
+- url: http://localhost:8080
+  description: Development Server
+- url: https://api.yourdomain.com
+  description: Production Server
+security:
+- cookieAuth: []
+tags:
+- name: Authentication
+  description: Endpoints for user authentication and session management
+paths:
+  /properties/{propertyId}/pricing-config:
+    get:
+      tags:
+      - property-pricing-config-controller
+      operationId: getPricingConfig
+      parameters:
+      - name: propertyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePropertyPricingConfigResponse"
+    put:
+      tags:
+      - property-pricing-config-controller
+      operationId: createOrUpdatePricingConfig
+      parameters:
+      - name: propertyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PropertyPricingConfigRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePropertyPricingConfigResponse"
+  /users:
+    get:
+      tags:
+      - user-controller
+      operationId: getAllUsers
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListUserResponse"
+    post:
+      tags:
+      - user-controller
+      operationId: createUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseUserResponse"
+  /users/{userId}/permission-overrides:
+    get:
+      tags:
+      - user-permission-override-controller
+      operationId: getUserPermissionOverrides
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListUserPermissionOverrideResponse"
+    post:
+      tags:
+      - user-permission-override-controller
+      operationId: addPermissionOverride
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserPermissionOverrideRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseUserPermissionOverrideResponse"
+  /rooms/{roomId}/maintenance:
+    get:
+      tags:
+      - room-maintenance-controller
+      operationId: getRoomMaintenanceByRoom
+      parameters:
+      - name: roomId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListRoomMaintenanceResponse"
+    post:
+      tags:
+      - room-maintenance-controller
+      operationId: createRoomMaintenance
+      parameters:
+      - name: roomId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoomMaintenanceRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRoomMaintenanceResponse"
+  /roles:
+    get:
+      tags:
+      - role-controller
+      operationId: getAllRoles
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListRoleResponse"
+    post:
+      tags:
+      - role-controller
+      operationId: createRole
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoleRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRoleResponse"
+  /roles/{roleId}/permissions:
+    get:
+      tags:
+      - role-controller
+      operationId: getRolePermissions
+      parameters:
+      - name: roleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListRolePermissionResponse"
+    post:
+      tags:
+      - role-controller
+      operationId: addPermissionToRole
+      parameters:
+      - name: roleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RolePermissionRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRolePermissionResponse"
+  /rate-plans/{ratePlanId}/rules:
+    get:
+      tags:
+      - rate-rule-controller
+      operationId: getRateRulesByPlan
+      parameters:
+      - name: ratePlanId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListRateRuleResponse"
+    post:
+      tags:
+      - rate-rule-controller
+      operationId: createRateRule
+      parameters:
+      - name: ratePlanId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRateRuleRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRateRuleResponse"
+  /properties:
+    get:
+      tags:
+      - property-controller
+      operationId: getAllProperties
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPropertyResponse"
+    post:
+      tags:
+      - property-controller
+      operationId: createProperty
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePropertyRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePropertyResponse"
+  /properties/{propertyId}/rooms:
+    get:
+      tags:
+      - room-controller
+      operationId: getRoomsByProperty
+      parameters:
+      - name: propertyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListRoomResponse"
+    post:
+      tags:
+      - room-controller
+      operationId: createRoom
+      parameters:
+      - name: propertyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoomRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRoomResponse"
+  /properties/{propertyId}/room-types:
+    get:
+      tags:
+      - room-type-controller
+      operationId: getRoomTypesByProperty
+      parameters:
+      - name: propertyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListRoomTypeResponse"
+    post:
+      tags:
+      - room-type-controller
+      operationId: createRoomType
+      parameters:
+      - name: propertyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoomTypeRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRoomTypeResponse"
+  /properties/{propertyId}/rate-plans:
+    get:
+      tags:
+      - rate-plan-controller
+      operationId: getRatePlansByProperty
+      parameters:
+      - name: propertyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListRatePlanResponse"
+    post:
+      tags:
+      - rate-plan-controller
+      operationId: createRatePlan
+      parameters:
+      - name: propertyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRatePlanRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRatePlanResponse"
+  /properties/{propertyId}/bookings:
+    post:
+      tags:
+      - booking-controller
+      operationId: createBooking
+      parameters:
+      - name: propertyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseBookingResponse"
+  /properties/{propertyId}/blocks:
+    get:
+      tags:
+      - property-block-controller
+      operationId: getPropertyBlocks
+      parameters:
+      - name: propertyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPropertyBlockResponse"
+    post:
+      tags:
+      - property-block-controller
+      operationId: createPropertyBlock
+      parameters:
+      - name: propertyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePropertyBlockRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePropertyBlockResponse"
+  /properties/bookings/{bookingId}/checkout:
+    post:
+      tags:
+      - booking-controller
+      operationId: checkOut
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseBookingResponse"
+  /properties/bookings/{bookingId}/checkin:
+    post:
+      tags:
+      - booking-controller
+      operationId: checkIn
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseBookingResponse"
+  /bookings/{bookingId}/payments:
+    get:
+      tags:
+      - payment-controller
+      operationId: getPaymentsByBooking
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPaymentResponse"
+    post:
+      tags:
+      - payment-controller
+      operationId: recordPayment
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePaymentRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePaymentResponse"
+  /bookings/{bookingId}/items:
+    post:
+      tags:
+      - booking-item-controller
+      operationId: addBookingItem
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingItemRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseBookingResponse"
+  /bookings/{bookingId}/guests:
+    get:
+      tags:
+      - guest-controller
+      operationId: getGuestsByBooking
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListGuestResponse"
+    post:
+      tags:
+      - guest-controller
+      operationId: addGuest
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GuestRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseGuestResponse"
+  /auth/refresh:
+    post:
+      tags:
+      - Authentication
+      summary: Refresh access token
+      description: Get a new access token using the refresh token. Refresh token must
+        be present in hms_refreshToken cookie.
+      operationId: refresh
+      responses:
+        "200":
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "401":
+          description: Invalid or expired refresh token
+  /auth/logout:
+    post:
+      tags:
+      - Authentication
+      summary: User logout
+      description: Invalidate refresh token and clear authentication cookies (hms_accessToken
+        and hms_refreshToken).
+      operationId: logout
+      responses:
+        "200":
+          description: "Logout successful, cookies cleared"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+  /auth/login:
+    post:
+      tags:
+      - Authentication
+      summary: User login
+      description: Authenticate user with email and password. Returns JWT tokens in
+        HTTP-only cookies (hms_accessToken and hms_refreshToken).
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          description: "Login successful, cookies set"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "401":
+          description: Invalid credentials
+  /users/{userId}:
+    get:
+      tags:
+      - user-controller
+      operationId: getUserById
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseUserResponse"
+    delete:
+      tags:
+      - user-controller
+      operationId: deleteUser
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+    patch:
+      tags:
+      - user-controller
+      operationId: updateUser
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseUserResponse"
+  /rooms/maintenance/{maintenanceId}:
+    get:
+      tags:
+      - room-maintenance-controller
+      operationId: getRoomMaintenanceById
+      parameters:
+      - name: maintenanceId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRoomMaintenanceResponse"
+    delete:
+      tags:
+      - room-maintenance-controller
+      operationId: deleteRoomMaintenance
+      parameters:
+      - name: maintenanceId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+    patch:
+      tags:
+      - room-maintenance-controller
+      operationId: updateRoomMaintenance
+      parameters:
+      - name: maintenanceId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRoomMaintenanceRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRoomMaintenanceResponse"
+  /roles/{roleId}:
+    get:
+      tags:
+      - role-controller
+      operationId: getRoleById
+      parameters:
+      - name: roleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRoleResponse"
+    delete:
+      tags:
+      - role-controller
+      operationId: deleteRole
+      parameters:
+      - name: roleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+    patch:
+      tags:
+      - role-controller
+      operationId: updateRole
+      parameters:
+      - name: roleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRoleRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRoleResponse"
+  /rate-plans/rules/{rateRuleId}:
+    get:
+      tags:
+      - rate-rule-controller
+      operationId: getRateRuleById
+      parameters:
+      - name: rateRuleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRateRuleResponse"
+    delete:
+      tags:
+      - rate-rule-controller
+      operationId: deleteRateRule
+      parameters:
+      - name: rateRuleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+    patch:
+      tags:
+      - rate-rule-controller
+      operationId: updateRateRule
+      parameters:
+      - name: rateRuleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRateRuleRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRateRuleResponse"
+  /properties/{propertyId}:
+    get:
+      tags:
+      - property-controller
+      operationId: getPropertyById
+      parameters:
+      - name: propertyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePropertyResponse"
+    delete:
+      tags:
+      - property-controller
+      operationId: deleteProperty
+      parameters:
+      - name: propertyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+    patch:
+      tags:
+      - property-controller
+      operationId: updateProperty
+      parameters:
+      - name: propertyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePropertyRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePropertyResponse"
+  /properties/rooms/{roomId}:
+    get:
+      tags:
+      - room-controller
+      operationId: getRoomById
+      parameters:
+      - name: roomId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRoomResponse"
+    delete:
+      tags:
+      - room-controller
+      operationId: deleteRoom
+      parameters:
+      - name: roomId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+    patch:
+      tags:
+      - room-controller
+      operationId: updateRoom
+      parameters:
+      - name: roomId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRoomRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRoomResponse"
+  /properties/room-types/{roomTypeId}:
+    get:
+      tags:
+      - room-type-controller
+      operationId: getRoomTypeById
+      parameters:
+      - name: roomTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRoomTypeResponse"
+    delete:
+      tags:
+      - room-type-controller
+      operationId: deleteRoomType
+      parameters:
+      - name: roomTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+    patch:
+      tags:
+      - room-type-controller
+      operationId: updateRoomType
+      parameters:
+      - name: roomTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRoomTypeRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRoomTypeResponse"
+  /properties/rate-plans/{ratePlanId}:
+    get:
+      tags:
+      - rate-plan-controller
+      operationId: getRatePlanById
+      parameters:
+      - name: ratePlanId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRatePlanResponse"
+    delete:
+      tags:
+      - rate-plan-controller
+      operationId: deleteRatePlan
+      parameters:
+      - name: ratePlanId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+    patch:
+      tags:
+      - rate-plan-controller
+      operationId: updateRatePlan
+      parameters:
+      - name: ratePlanId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRatePlanRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRatePlanResponse"
+  /properties/bookings/{bookingId}:
+    get:
+      tags:
+      - booking-controller
+      operationId: getBookingById
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseBookingResponse"
+    delete:
+      tags:
+      - booking-controller
+      operationId: deleteBooking
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+    patch:
+      tags:
+      - booking-controller
+      operationId: updateBooking
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBookingRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseBookingResponse"
+  /properties/blocks/{blockId}:
+    get:
+      tags:
+      - property-block-controller
+      operationId: getPropertyBlockById
+      parameters:
+      - name: blockId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePropertyBlockResponse"
+    delete:
+      tags:
+      - property-block-controller
+      operationId: deletePropertyBlock
+      parameters:
+      - name: blockId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+    patch:
+      tags:
+      - property-block-controller
+      operationId: updatePropertyBlock
+      parameters:
+      - name: blockId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePropertyBlockRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePropertyBlockResponse"
+  /bookings/{bookingId}/items/{itemId}:
+    delete:
+      tags:
+      - booking-item-controller
+      operationId: removeBookingItem
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseBookingResponse"
+    patch:
+      tags:
+      - booking-item-controller
+      operationId: updateBookingItem
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBookingItemRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseBookingResponse"
+  /bookings/{bookingId}/guests/{guestId}:
+    patch:
+      tags:
+      - guest-controller
+      operationId: updateGuest
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: guestId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateGuestRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseGuestResponse"
+  /properties/{propertyId}/availability:
+    get:
+      tags:
+      - booking-controller
+      operationId: getPropertyAvailability
+      parameters:
+      - name: propertyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: from
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseAvailabilityResponse"
+  /permissions:
+    get:
+      tags:
+      - permission-controller
+      operationId: getAllPermissions
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPermissionResponse"
+  /bookings/rooms/{roomId}/availability:
+    get:
+      tags:
+      - booking-item-controller
+      operationId: checkRoomAvailability
+      parameters:
+      - name: roomId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: from
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseRoomAvailabilityCheckResponse"
+  /users/{userId}/permission-overrides/{overrideId}:
+    delete:
+      tags:
+      - user-permission-override-controller
+      operationId: removePermissionOverride
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: overrideId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+  /roles/{roleId}/permissions/{rolePermissionId}:
+    delete:
+      tags:
+      - role-controller
+      operationId: removePermissionFromRole
+      parameters:
+      - name: roleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: rolePermissionId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
+components:
+  schemas:
+    PropertyPricingConfigRequest:
+      type: object
+      properties:
+        weekendDays:
+          type: array
+          items:
+            type: boolean
+          maxItems: 7
+          minItems: 7
+      required:
+      - weekendDays
+    ApiResponsePropertyPricingConfigResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/PropertyPricingConfigResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    ErrorDetails:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details: {}
+    PropertyPricingConfigResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        propertyId:
+          type: integer
+          format: int64
+        weekendDays:
+          type: array
+          items:
+            type: boolean
+    CreateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+        roleId:
+          type: integer
+          format: int64
+      required:
+      - email
+      - name
+      - password
+      - roleId
+    ApiResponseUserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/UserResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        email:
+          type: string
+        roleId:
+          type: integer
+          format: int64
+        roleName:
+          type: string
+        isActive:
+          type: boolean
+    UserPermissionOverrideRequest:
+      type: object
+      properties:
+        permissionId:
+          type: integer
+          format: int64
+        accessLevel:
+          type: string
+          enum:
+          - DISABLED
+          - READ
+          - WRITE
+      required:
+      - accessLevel
+      - permissionId
+    ApiResponseUserPermissionOverrideResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/UserPermissionOverrideResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    UserPermissionOverrideResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        permissionId:
+          type: integer
+          format: int64
+        permissionCode:
+          type: string
+        accessLevel:
+          type: string
+          enum:
+          - DISABLED
+          - READ
+          - WRITE
+    CreateRoomMaintenanceRequest:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+        status:
+          type: string
+          enum:
+          - SCHEDULED
+          - IN_PROGRESS
+          - COMPLETED
+      required:
+      - startDate
+    ApiResponseRoomMaintenanceResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/RoomMaintenanceResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    RoomMaintenanceResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        roomId:
+          type: integer
+          format: int64
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+        status:
+          type: string
+          enum:
+          - SCHEDULED
+          - IN_PROGRESS
+          - COMPLETED
+    CreateRoleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+      required:
+      - name
+    ApiResponseRoleResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/RoleResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    RoleResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+    RolePermissionRequest:
+      type: object
+      properties:
+        permissionId:
+          type: integer
+          format: int64
+        accessLevel:
+          type: string
+          enum:
+          - DISABLED
+          - READ
+          - WRITE
+      required:
+      - accessLevel
+      - permissionId
+    ApiResponseRolePermissionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/RolePermissionResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    RolePermissionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        roleId:
+          type: integer
+          format: int64
+        permissionId:
+          type: integer
+          format: int64
+        permissionCode:
+          type: string
+        accessLevel:
+          type: string
+          enum:
+          - DISABLED
+          - READ
+          - WRITE
+    CreateRateRuleRequest:
+      type: object
+      properties:
+        roomTypeId:
+          type: integer
+          format: int64
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        weekdayPrice:
+          type: number
+          minimum: 0.0
+        weekendPrice:
+          type: number
+          minimum: 0.0
+        extraAdultPrice:
+          type: number
+          minimum: 0.0
+        extraChildPrice:
+          type: number
+          minimum: 0.0
+        minNights:
+          type: integer
+          format: int32
+          minimum: 1
+        priority:
+          type: integer
+          format: int32
+          minimum: 1
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - INACTIVE
+        notes:
+          type: string
+      required:
+      - endDate
+      - roomTypeId
+      - startDate
+      - weekdayPrice
+      - weekendPrice
+    ApiResponseRateRuleResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/RateRuleResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    RateRuleResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        ratePlanId:
+          type: integer
+          format: int64
+        roomTypeId:
+          type: integer
+          format: int64
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        weekdayPrice:
+          type: number
+        weekendPrice:
+          type: number
+        extraAdultPrice:
+          type: number
+        extraChildPrice:
+          type: number
+        minNights:
+          type: integer
+          format: int32
+        priority:
+          type: integer
+          format: int32
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - INACTIVE
+        notes:
+          type: string
+    CreatePropertyRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        timezone:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+          minLength: 1
+        state:
+          type: string
+        country:
+          type: string
+          minLength: 1
+        postalCode:
+          type: string
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - INACTIVE
+      required:
+      - city
+      - country
+      - name
+    ApiResponsePropertyResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/PropertyResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    PropertyResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        timezone:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - INACTIVE
+    CreateRoomRequest:
+      type: object
+      properties:
+        roomTypeId:
+          type: integer
+          format: int64
+        blockId:
+          type: integer
+          format: int64
+        roomNumber:
+          type: string
+          minLength: 1
+        floorNumber:
+          type: integer
+          format: int32
+        status:
+          type: string
+          enum:
+          - AVAILABLE
+          - OCCUPIED
+          - MAINTENANCE
+          - OUT_OF_SERVICE
+      required:
+      - roomNumber
+      - roomTypeId
+    ApiResponseRoomResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/RoomResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    RoomResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        propertyId:
+          type: integer
+          format: int64
+        blockId:
+          type: integer
+          format: int64
+        roomTypeId:
+          type: integer
+          format: int64
+        roomNumber:
+          type: string
+        floorNumber:
+          type: integer
+          format: int32
+        status:
+          type: string
+          enum:
+          - AVAILABLE
+          - OCCUPIED
+          - MAINTENANCE
+          - OUT_OF_SERVICE
+    CreateRoomTypeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        baseOccupancy:
+          type: integer
+          format: int32
+          minimum: 1
+        maxOccupancy:
+          type: integer
+          format: int32
+          minimum: 1
+      required:
+      - name
+    ApiResponseRoomTypeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/RoomTypeResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    RoomTypeResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        propertyId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        baseOccupancy:
+          type: integer
+          format: int32
+        maxOccupancy:
+          type: integer
+          format: int32
+    CreateRatePlanRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        currency:
+          type: string
+          maxLength: 3
+          minLength: 3
+      required:
+      - currency
+      - name
+    ApiResponseRatePlanResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/RatePlanResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    RatePlanResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        propertyId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        currency:
+          type: string
+    BookingItemRequest:
+      type: object
+      properties:
+        roomTypeId:
+          type: integer
+          format: int64
+        roomId:
+          type: integer
+          format: int64
+        checkinDate:
+          type: string
+          format: date
+        checkoutDate:
+          type: string
+          format: date
+        pricePerNight:
+          type: number
+        discountAmount:
+          type: number
+        numAdults:
+          type: integer
+          format: int32
+          minimum: 1
+        numChildren:
+          type: integer
+          format: int32
+          minimum: 0
+      required:
+      - checkinDate
+      - checkoutDate
+      - pricePerNight
+      - roomId
+      - roomTypeId
+    CreateBookingRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - DRAFT
+          - CONFIRMED
+          - CHECKED_IN
+          - CHECKED_OUT
+          - CANCELLED
+          - NO_SHOW
+        source:
+          type: string
+          enum:
+          - INTERNAL
+          - WEBSITE
+          - B2B
+          - PHONE
+        paymentStatus:
+          type: string
+          enum:
+          - PENDING
+          - PARTIAL
+          - PAID
+          - REFUNDED
+        totalAmount:
+          type: number
+        advanceAmount:
+          type: number
+        currency:
+          type: string
+        checkinTime:
+          type: string
+        checkoutTime:
+          type: string
+        notes:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookingItemRequest"
+          minItems: 1
+        guests:
+          type: array
+          items:
+            $ref: "#/components/schemas/GuestRequest"
+          minItems: 1
+        payment:
+          $ref: "#/components/schemas/CreatePaymentRequest"
+      required:
+      - currency
+      - guests
+      - items
+      - paymentStatus
+      - source
+      - status
+      - totalAmount
+    CreatePaymentRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+        paymentMethod:
+          type: string
+          enum:
+          - CASH
+          - UPI
+          - INTERNET_BANKING
+          - CARD
+          - OTHER
+        transactionId:
+          type: string
+      required:
+      - amount
+      - paymentMethod
+    GuestRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        phone:
+          type: string
+        email:
+          type: string
+        isPrimary:
+          type: boolean
+      required:
+      - name
+    ApiResponseBookingResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/BookingResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    BookingItemResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        bookingId:
+          type: integer
+          format: int64
+        roomTypeId:
+          type: integer
+          format: int64
+        roomId:
+          type: integer
+          format: int64
+        checkinDate:
+          type: string
+          format: date
+        checkoutDate:
+          type: string
+          format: date
+        pricePerNight:
+          type: number
+        discountAmount:
+          type: number
+        numAdults:
+          type: integer
+          format: int32
+        numChildren:
+          type: integer
+          format: int32
+    BookingResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        propertyId:
+          type: integer
+          format: int64
+        createdByUserId:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum:
+          - DRAFT
+          - CONFIRMED
+          - CHECKED_IN
+          - CHECKED_OUT
+          - CANCELLED
+          - NO_SHOW
+        source:
+          type: string
+          enum:
+          - INTERNAL
+          - WEBSITE
+          - B2B
+          - PHONE
+        paymentStatus:
+          type: string
+          enum:
+          - PENDING
+          - PARTIAL
+          - PAID
+          - REFUNDED
+        totalAmount:
+          type: number
+        advanceAmount:
+          type: number
+        currency:
+          type: string
+        checkinTime:
+          type: string
+        checkoutTime:
+          type: string
+        notes:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookingItemResponse"
+    CreatePropertyBlockRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        blockType:
+          type: string
+          enum:
+          - APARTMENT
+          - GLASS_HOUSE
+          - TENT_CLUSTER
+          - VILLA
+          - OTHER
+        minBookingUnit:
+          type: string
+          enum:
+          - ROOM
+          - BLOCK
+      required:
+      - blockType
+      - minBookingUnit
+      - name
+    ApiResponsePropertyBlockResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/PropertyBlockResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    PropertyBlockResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        propertyId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        blockType:
+          type: string
+          enum:
+          - APARTMENT
+          - GLASS_HOUSE
+          - TENT_CLUSTER
+          - VILLA
+          - OTHER
+        minBookingUnit:
+          type: string
+          enum:
+          - ROOM
+          - BLOCK
+    ApiResponsePaymentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/PaymentResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    PaymentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        bookingId:
+          type: integer
+          format: int64
+        amount:
+          type: number
+        currency:
+          type: string
+        paymentMethod:
+          type: string
+          enum:
+          - CASH
+          - UPI
+          - INTERNET_BANKING
+          - CARD
+          - OTHER
+        status:
+          type: string
+          enum:
+          - SUCCESS
+          - PENDING
+          - FAILED
+          - REFUNDED
+        transactionId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    ApiResponseGuestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/GuestResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    GuestResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        bookingId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        isPrimary:
+          type: boolean
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data: {}
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+      required:
+      - email
+      - password
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        roleId:
+          type: integer
+          format: int64
+        isActive:
+          type: boolean
+    UpdateRoomMaintenanceRequest:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+        status:
+          type: string
+          enum:
+          - SCHEDULED
+          - IN_PROGRESS
+          - COMPLETED
+    UpdateRoleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+    UpdateRateRuleRequest:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        weekdayPrice:
+          type: number
+        weekendPrice:
+          type: number
+        extraAdultPrice:
+          type: number
+        extraChildPrice:
+          type: number
+        minNights:
+          type: integer
+          format: int32
+        priority:
+          type: integer
+          format: int32
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - INACTIVE
+        notes:
+          type: string
+    UpdatePropertyRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        timezone:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - INACTIVE
+    UpdateRoomRequest:
+      type: object
+      properties:
+        roomTypeId:
+          type: integer
+          format: int64
+        blockId:
+          type: integer
+          format: int64
+        roomNumber:
+          type: string
+        floorNumber:
+          type: integer
+          format: int32
+        status:
+          type: string
+          enum:
+          - AVAILABLE
+          - OCCUPIED
+          - MAINTENANCE
+          - OUT_OF_SERVICE
+    UpdateRoomTypeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        baseOccupancy:
+          type: integer
+          format: int32
+        maxOccupancy:
+          type: integer
+          format: int32
+    UpdateRatePlanRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        currency:
+          type: string
+    UpdateBookingRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - DRAFT
+          - CONFIRMED
+          - CHECKED_IN
+          - CHECKED_OUT
+          - CANCELLED
+          - NO_SHOW
+        source:
+          type: string
+          enum:
+          - INTERNAL
+          - WEBSITE
+          - B2B
+          - PHONE
+        paymentStatus:
+          type: string
+          enum:
+          - PENDING
+          - PARTIAL
+          - PAID
+          - REFUNDED
+        checkinTime:
+          type: string
+        checkoutTime:
+          type: string
+        notes:
+          type: string
+    UpdatePropertyBlockRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        blockType:
+          type: string
+          enum:
+          - APARTMENT
+          - GLASS_HOUSE
+          - TENT_CLUSTER
+          - VILLA
+          - OTHER
+        minBookingUnit:
+          type: string
+          enum:
+          - ROOM
+          - BLOCK
+    UpdateBookingItemRequest:
+      type: object
+      properties:
+        roomId:
+          type: integer
+          format: int64
+        pricePerNight:
+          type: number
+        discountAmount:
+          type: number
+        numAdults:
+          type: integer
+          format: int32
+        numChildren:
+          type: integer
+          format: int32
+    UpdateGuestRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        isPrimary:
+          type: boolean
+    ApiResponseListUserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    ApiResponseListUserPermissionOverrideResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserPermissionOverrideResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    ApiResponseListRoomMaintenanceResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoomMaintenanceResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    ApiResponseListRoleResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoleResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    ApiResponseListRolePermissionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/RolePermissionResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    ApiResponseListRateRuleResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/RateRuleResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    ApiResponseListPropertyResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PropertyResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    ApiResponseListRoomResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoomResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    ApiResponseListRoomTypeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoomTypeResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    ApiResponseListRatePlanResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/RatePlanResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    ApiResponseListPropertyBlockResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PropertyBlockResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    ApiResponseAvailabilityResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/AvailabilityResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    AvailabilityResponse:
+      type: object
+      properties:
+        propertyId:
+          type: integer
+          format: int64
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        roomTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoomTypeAvailability"
+    OccupiedDate:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        status:
+          type: string
+        bookingId:
+          type: integer
+          format: int64
+        bookingStatus:
+          type: string
+          enum:
+          - DRAFT
+          - CONFIRMED
+          - CHECKED_IN
+          - CHECKED_OUT
+          - CANCELLED
+          - NO_SHOW
+        reason:
+          type: string
+    RoomAvailability:
+      type: object
+      properties:
+        roomId:
+          type: integer
+          format: int64
+        roomNumber:
+          type: string
+        occupiedDates:
+          type: array
+          items:
+            $ref: "#/components/schemas/OccupiedDate"
+    RoomTypeAvailability:
+      type: object
+      properties:
+        roomTypeId:
+          type: integer
+          format: int64
+        roomTypeName:
+          type: string
+        rooms:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoomAvailability"
+    ApiResponseListPermissionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PermissionResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    PermissionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        code:
+          type: string
+        description:
+          type: string
+    ApiResponseListPaymentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    ApiResponseListGuestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/GuestResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    ApiResponseRoomAvailabilityCheckResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/RoomAvailabilityCheckResponse"
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+    RoomAvailabilityCheckResponse:
+      type: object
+      properties:
+        roomId:
+          type: integer
+          format: int64
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        isAvailable:
+          type: boolean
+        occupiedDates:
+          type: array
+          items:
+            type: string
+            format: date
+    ApiResponseVoid:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data: {}
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      description: JWT access token stored in HTTP-only cookie. Obtain by calling
+        POST /auth/login with valid credentials.
+      name: hms_accessToken
+      in: cookie
