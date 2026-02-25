@@ -1,5 +1,5 @@
 // ===== API SERVICE =====
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'https://sohraa-hms-production-803b.up.railway.app';
 
 async function request(path, options = {}) {
   const url = `${BASE_URL}${path}`;
