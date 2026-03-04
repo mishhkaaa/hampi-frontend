@@ -1,7 +1,7 @@
 // ===== BLOCKS PAGE =====
 import { renderLayout } from '../layout.js';
 import { blocksApi } from '../api.js';
-import { showToast, showModal, closeModal, showConfirm, statusBadge, initIcons, store } from '../utils.js';
+import { showToast, showModal, closeModal, showConfirm, statusBadge, initIcons, store, handlePropertyNotFound } from '../utils.js';
 
 let blocks = [];
 
@@ -16,7 +16,10 @@ async function loadData() {
     try {
         const res = await blocksApi.getByProperty(store.getState().currentProperty.id);
         blocks = res.data || [];
-    } catch (err) { showToast('Error: ' + err.message, 'error'); }
+    } catch (err) {
+        if (handlePropertyNotFound(err)) return;
+        showToast('Error loading blocks: ' + err.message, 'error');
+    }
     renderList();
 }
 

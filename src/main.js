@@ -14,6 +14,8 @@ import { renderMaintenance } from './pages/maintenance.js';
 import { renderPricingConfig } from './pages/pricingConfig.js';
 import { renderUsers } from './pages/users.js';
 import { renderRoles } from './pages/roles.js';
+import { renderRoomLayout } from './pages/roomLayout.js';
+import { renderWebCheckin } from './pages/webCheckin.js';
 
 // Auth guard
 function requireAuth(handler) {
@@ -30,6 +32,7 @@ function requireAuth(handler) {
 // Initialize router
 const router = new Router([
     { path: '/login', handler: () => renderLogin() },
+    { path: '/checkin', handler: () => renderWebCheckin() }, // Public — no auth guard
     { path: '/', handler: requireAuth(() => renderDashboard()) },
     { path: '/properties', handler: requireAuth(() => renderProperties()) },
     { path: '/rooms', handler: requireAuth(() => renderRooms()) },
@@ -40,6 +43,7 @@ const router = new Router([
     { path: '/rate-plans', handler: requireAuth(() => renderRatePlans()) },
     { path: '/maintenance', handler: requireAuth(() => renderMaintenance()) },
     { path: '/pricing-config', handler: requireAuth(() => renderPricingConfig()) },
+    { path: '/room-layout', handler: requireAuth(() => renderRoomLayout()) },
     { path: '/users', handler: requireAuth(() => renderUsers()) },
     { path: '/roles', handler: requireAuth(() => renderRoles()) },
 ]);

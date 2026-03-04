@@ -1,7 +1,7 @@
 // ===== MAINTENANCE PAGE =====
 import { renderLayout } from '../layout.js';
 import { maintenanceApi, roomsApi } from '../api.js';
-import { showToast, showModal, closeModal, showConfirm, statusBadge, formatDate, initIcons, store } from '../utils.js';
+import { showToast, showModal, closeModal, showConfirm, statusBadge, formatDate, initIcons, store, handlePropertyNotFound } from '../utils.js';
 
 let rooms = [], maintenanceRecords = [], selectedRoomId = null;
 
@@ -13,7 +13,10 @@ export async function renderMaintenance() {
     try {
         const rRes = await roomsApi.getByProperty(prop.id);
         rooms = rRes.data || [];
-    } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    } catch (e) {
+        if (handlePropertyNotFound(e)) return;
+        showToast('Error loading rooms: ' + e.message, 'error');
+    }
 
     // Check for roomId query param
     const hash = window.location.hash;

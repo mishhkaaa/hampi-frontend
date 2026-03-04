@@ -34,37 +34,47 @@ export function renderLayout(pageContent, activeNav = '') {
 
           ${prop ? `
           <div class="sidebar-section-title">${prop.name || 'Property'}</div>
-          <a href="#/rooms" class="sidebar-link ${activeNav === 'rooms' ? 'active' : ''}">
-            <i data-lucide="door-open"></i>
-            <span>Rooms</span>
-          </a>
-          <a href="#/room-types" class="sidebar-link ${activeNav === 'room-types' ? 'active' : ''}">
-            <i data-lucide="layers"></i>
-            <span>Room Types</span>
-          </a>
-          <a href="#/blocks" class="sidebar-link ${activeNav === 'blocks' ? 'active' : ''}">
+
+          <div class="sidebar-group-label">Property Inventory</div>
+          <a href="#/blocks" class="sidebar-link sidebar-link-sub ${activeNav === 'blocks' ? 'active' : ''}">
             <i data-lucide="boxes"></i>
             <span>Blocks</span>
           </a>
-          <a href="#/bookings" class="sidebar-link ${activeNav === 'bookings' ? 'active' : ''}">
+          <a href="#/room-types" class="sidebar-link sidebar-link-sub ${activeNav === 'room-types' ? 'active' : ''}">
+            <i data-lucide="layers"></i>
+            <span>Room Types</span>
+          </a>
+          <a href="#/rooms" class="sidebar-link sidebar-link-sub ${activeNav === 'rooms' ? 'active' : ''}">
+            <i data-lucide="door-open"></i>
+            <span>Rooms</span>
+          </a>
+
+          <div class="sidebar-group-label">Operations</div>
+          <a href="#/bookings" class="sidebar-link sidebar-link-sub ${activeNav === 'bookings' ? 'active' : ''}">
             <i data-lucide="calendar-check"></i>
             <span>Bookings</span>
           </a>
-          <a href="#/availability" class="sidebar-link ${activeNav === 'availability' ? 'active' : ''}">
+          <a href="#/availability" class="sidebar-link sidebar-link-sub ${activeNav === 'availability' ? 'active' : ''}">
             <i data-lucide="calendar-range"></i>
             <span>Availability</span>
           </a>
-          <a href="#/rate-plans" class="sidebar-link ${activeNav === 'rate-plans' ? 'active' : ''}">
+          <a href="#/room-layout" class="sidebar-link sidebar-link-sub ${activeNav === 'room-layout' ? 'active' : ''}">
+            <i data-lucide="grid-2x2"></i>
+            <span>Room Layout</span>
+          </a>
+          <a href="#/maintenance" class="sidebar-link sidebar-link-sub ${activeNav === 'maintenance' ? 'active' : ''}">
+            <i data-lucide="wrench"></i>
+            <span>Maintenance</span>
+          </a>
+
+          <div class="sidebar-group-label">Pricing</div>
+          <a href="#/rate-plans" class="sidebar-link sidebar-link-sub ${activeNav === 'rate-plans' ? 'active' : ''}">
             <i data-lucide="receipt"></i>
             <span>Rate Plans</span>
           </a>
-          <a href="#/pricing-config" class="sidebar-link ${activeNav === 'pricing-config' ? 'active' : ''}">
+          <a href="#/pricing-config" class="sidebar-link sidebar-link-sub ${activeNav === 'pricing-config' ? 'active' : ''}">
             <i data-lucide="settings-2"></i>
-            <span>Pricing Config</span>
-          </a>
-          <a href="#/maintenance" class="sidebar-link ${activeNav === 'maintenance' ? 'active' : ''}">
-            <i data-lucide="wrench"></i>
-            <span>Maintenance</span>
+            <span>Weekend Config</span>
           </a>
           ` : ''}
 
@@ -119,10 +129,8 @@ export function renderLayout(pageContent, activeNav = '') {
     </div>
   `;
 
-    // Initialize Lucide icons
     initIcons();
 
-    // Logout handler
     document.getElementById('btn-logout')?.addEventListener('click', async () => {
         try {
             await authApi.logout();

@@ -116,6 +116,10 @@ export const blocksApi = {
 
 // ===== BOOKINGS API =====
 export const bookingsApi = {
+  getByProperty: (propertyId, params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/properties/${propertyId}/bookings${query ? '?' + query : ''}`);
+  },
   getById: (bookingId) => request(`/properties/bookings/${bookingId}`),
   create: (propertyId, data) => request(`/properties/${propertyId}/bookings`, { method: 'POST', body: data }),
   update: (bookingId, data) => request(`/properties/bookings/${bookingId}`, { method: 'PATCH', body: data }),
@@ -138,6 +142,12 @@ export const guestsApi = {
   getByBooking: (bookingId) => request(`/bookings/${bookingId}/guests`),
   add: (bookingId, data) => request(`/bookings/${bookingId}/guests`, { method: 'POST', body: data }),
   update: (bookingId, guestId, data) => request(`/bookings/${bookingId}/guests/${guestId}`, { method: 'PATCH', body: data }),
+  // Search guests by phone or other params — used for web check-in lookup
+  search: (params) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/guests?${query}`);
+  },
+  getByPhone: (phone) => request(`/guests?phone=${encodeURIComponent(phone)}`),
 };
 
 // ===== PAYMENTS API =====

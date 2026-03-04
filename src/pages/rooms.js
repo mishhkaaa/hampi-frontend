@@ -1,7 +1,7 @@
 // ===== ROOMS PAGE =====
 import { renderLayout } from '../layout.js';
 import { roomsApi, roomTypesApi, blocksApi } from '../api.js';
-import { showToast, showModal, closeModal, showConfirm, statusBadge, initIcons, store } from '../utils.js';
+import { showToast, showModal, closeModal, showConfirm, statusBadge, initIcons, store, handlePropertyNotFound } from '../utils.js';
 
 let rooms = [], roomTypes = [], blocks = [];
 
@@ -24,7 +24,8 @@ async function loadRooms() {
         roomTypes = rtRes.data || [];
         blocks = bRes.data || [];
     } catch (err) {
-        showToast('Error: ' + err.message, 'error');
+        if (handlePropertyNotFound(err)) return;
+        showToast('Error loading rooms: ' + err.message, 'error');
     }
     renderList();
 }

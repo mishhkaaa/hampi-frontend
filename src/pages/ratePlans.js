@@ -1,7 +1,7 @@
 // ===== RATE PLANS PAGE =====
 import { renderLayout } from '../layout.js';
 import { ratePlansApi, rateRulesApi, roomTypesApi } from '../api.js';
-import { showToast, showModal, closeModal, showConfirm, statusBadge, formatDate, formatCurrency, initIcons, store } from '../utils.js';
+import { showToast, showModal, closeModal, showConfirm, statusBadge, formatDate, formatCurrency, initIcons, store, handlePropertyNotFound } from '../utils.js';
 
 let ratePlans = [], roomTypes = [];
 
@@ -21,7 +21,10 @@ async function loadData() {
         ]);
         ratePlans = rpRes.data || [];
         roomTypes = rtRes.data || [];
-    } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    } catch (e) {
+        if (handlePropertyNotFound(e)) return;
+        showToast('Error loading rate plans: ' + e.message, 'error');
+    }
     renderList();
 }
 

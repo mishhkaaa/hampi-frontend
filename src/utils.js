@@ -138,7 +138,8 @@ export class Router {
     }
 
     resolve() {
-        const hash = window.location.hash.slice(1) || '/';
+        const rawHash = window.location.hash.slice(1) || '/';
+        const hash = rawHash.split('?')[0]; // strip query params for route matching
 
         for (const route of this.routes) {
             const match = this.matchRoute(route.path, hash);
@@ -215,6 +216,21 @@ export function initIcons() {
     if (window.lucide) {
         window.lucide.createIcons();
     }
+}
+
+// Clear stale property and redirect to properties page
+// Call this when an API returns 404 "Property not found"
+export function handlePropertyNotFound(err) {
+    const isNotFound = err?.status === 404 ||
+        (err?.message || '').toLowerCase().includes('property not found') ||
+        (err?.message || '').toLowerCase().includes('not found');
+    if (isNotFound) {
+        store.setState({ currentProperty: null });
+        showToast('Property not found — please re-select a property.', 'error');
+        window.location.hash = '#/properties';
+        return true;
+    }
+    return false;
 }
 
 // Generate today's date string

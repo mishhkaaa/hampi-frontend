@@ -1,7 +1,7 @@
 // ===== ROOM TYPES PAGE =====
 import { renderLayout } from '../layout.js';
 import { roomTypesApi } from '../api.js';
-import { showToast, showModal, closeModal, showConfirm, initIcons, store } from '../utils.js';
+import { showToast, showModal, closeModal, showConfirm, initIcons, store, handlePropertyNotFound } from '../utils.js';
 
 let roomTypes = [];
 
@@ -17,7 +17,10 @@ async function loadData() {
     try {
         const res = await roomTypesApi.getByProperty(prop.id);
         roomTypes = res.data || [];
-    } catch (err) { showToast('Error: ' + err.message, 'error'); }
+    } catch (err) {
+        if (handlePropertyNotFound(err)) return;
+        showToast('Error loading room types: ' + err.message, 'error');
+    }
     renderList();
 }
 
