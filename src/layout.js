@@ -1,6 +1,6 @@
 // ===== SIDEBAR & LAYOUT COMPONENT =====
 import { store, initIcons } from './utils.js';
-import { authApi } from './api.js';
+import { authApi, propertiesApi } from './api.js';
 import { showToast } from './utils.js';
 
 export function renderLayout(pageContent, activeNav = '') {
@@ -35,7 +35,7 @@ export function renderLayout(pageContent, activeNav = '') {
           ${prop ? `
           <div class="sidebar-section-title">${prop.name || 'Property'}</div>
 
-          <div class="sidebar-group-label">Property Inventory</div>
+          <div class="sidebar-group-label">Property Setup</div>
           <a href="#/blocks" class="sidebar-link sidebar-link-sub ${activeNav === 'blocks' ? 'active' : ''}">
             <i data-lucide="boxes"></i>
             <span>Blocks</span>
@@ -54,9 +54,13 @@ export function renderLayout(pageContent, activeNav = '') {
             <i data-lucide="calendar-check"></i>
             <span>Bookings</span>
           </a>
+          <a href="#/guests" class="sidebar-link sidebar-link-sub ${activeNav === 'guests' ? 'active' : ''}">
+            <i data-lucide="users"></i>
+            <span>Guests</span>
+          </a>
           <a href="#/availability" class="sidebar-link sidebar-link-sub ${activeNav === 'availability' ? 'active' : ''}">
             <i data-lucide="calendar-range"></i>
-            <span>Availability</span>
+            <span>Availability Calendar</span>
           </a>
           <a href="#/room-layout" class="sidebar-link sidebar-link-sub ${activeNav === 'room-layout' ? 'active' : ''}">
             <i data-lucide="grid-2x2"></i>
@@ -96,17 +100,18 @@ export function renderLayout(pageContent, activeNav = '') {
               <div class="name">${user?.name || 'User'}</div>
               <div class="role">${user?.roleName || 'Staff'}</div>
             </div>
-            <button class="btn btn-ghost" id="btn-logout" title="Logout">
-              <i data-lucide="log-out"></i>
-            </button>
           </div>
+          <button class="btn btn-logout" id="btn-logout" title="Sign Out">
+            <i data-lucide="log-out"></i>
+            <span>Sign Out</span>
+          </button>
         </div>
       </aside>
 
       <div class="main-content">
         <header class="topbar">
           <div class="topbar-left">
-            <button class="btn btn-ghost" id="btn-toggle-sidebar" style="display:none;">
+            <button class="btn btn-ghost sidebar-toggle-btn" id="btn-toggle-sidebar" aria-label="Toggle sidebar">
               <i data-lucide="menu"></i>
             </button>
             <div class="topbar-breadcrumb">
@@ -131,14 +136,41 @@ export function renderLayout(pageContent, activeNav = '') {
 
     initIcons();
 
+    // Sidebar toggle for mobile
+    const sidebar = document.getElementById('sidebar');
+    document.getElementById('btn-toggle-sidebar')?.addEventListener('click', () => {
+        sidebar?.classList.toggle('sidebar-open');
+    });
+
     document.getElementById('btn-logout')?.addEventListener('click', async () => {
         try {
             await authApi.logout();
-        } catch (e) { /* ignore */ }
+        } catch (_e) { /* ignore */ }
         store.setState({ user: null, currentProperty: null });
         localStorage.removeItem('hms_user');
         localStorage.removeItem('hms_property');
         window.location.hash = '#/login';
-        showToast('Logged out successfully', 'success');
+        showToast('Signed out successfully', 'success');
     });
+
+    // Populate property switcher if prop is set
+    if (prop) {
+        propertiesApi.getAll().then(res => {
+            const switcher = document.getElementById('property-switcher');
+            if (!switcher) return;
+            const properties = res.data || [];
+            switcher.innerHTML = properties.map(p =>
+                `<option value="${p.id}" ${p.id === prop.id ? 'selected' : ''}>${p.name}</option>`
+            ).join('');
+            switcher.addEventListener('change', () => {
+                const selected = properties.find(p => p.id == switcher.value);
+                if (selected) {
+                    store.setState({ currentProperty: selected });
+                    localStorage.setItem('hms_property', JSON.stringify(selected));
+                    // Re-render current page
+                    window.dispatchEvent(new HashChangeEvent('hashchange'));
+                }
+            });
+        }).catch(() => {});
+    }
 }

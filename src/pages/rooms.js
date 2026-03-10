@@ -32,10 +32,22 @@ async function loadRooms() {
 
 function renderList() {
     const content = `
+    <!-- Property Setup Guide -->
+    <div class="setup-flow-banner">
+      <div class="setup-flow-title"><i data-lucide="map" style="width:16px;height:16px;margin-right:6px;"></i> Property Setup Flow</div>
+      <div class="setup-flow-steps">
+        <a href="#/blocks" class="setup-flow-step"><span class="setup-flow-num">1</span><span>Add Blocks</span></a>
+        <span class="setup-flow-arrow">›</span>
+        <a href="#/room-types" class="setup-flow-step"><span class="setup-flow-num">2</span><span>Room Categories</span></a>
+        <span class="setup-flow-arrow">›</span>
+        <a href="#/rooms" class="setup-flow-step active"><span class="setup-flow-num">3</span><span>Add Rooms</span></a>
+      </div>
+    </div>
+
     <div class="page-header">
       <div class="page-header-left">
         <h1>Rooms</h1>
-        <p>Manage rooms for ${store.getState().currentProperty?.name}</p>
+        <p>Step 3: Add rooms and assign them to blocks and room categories</p>
       </div>
       <button class="btn btn-primary" id="btn-add-room"><i data-lucide="plus"></i> Add Room</button>
     </div>

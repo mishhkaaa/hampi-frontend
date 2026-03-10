@@ -16,6 +16,7 @@ import { renderUsers } from './pages/users.js';
 import { renderRoles } from './pages/roles.js';
 import { renderRoomLayout } from './pages/roomLayout.js';
 import { renderWebCheckin } from './pages/webCheckin.js';
+import { renderGuests } from './pages/guests.js';
 
 // Auth guard
 function requireAuth(handler) {
@@ -46,6 +47,7 @@ const router = new Router([
     { path: '/room-layout', handler: requireAuth(() => renderRoomLayout()) },
     { path: '/users', handler: requireAuth(() => renderUsers()) },
     { path: '/roles', handler: requireAuth(() => renderRoles()) },
+    { path: '/guests', handler: requireAuth(() => renderGuests()) },
 ]);
 
 // Initial route resolution

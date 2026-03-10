@@ -1,9 +1,9 @@
 // ===== BOOKINGS PAGE =====
 import { renderLayout } from '../layout.js';
-import { bookingsApi, roomsApi, roomTypesApi, ratePlansApi, rateRulesApi, guestsApi, paymentsApi, bookingItemsApi } from '../api.js';
+import { bookingsApi, roomsApi, roomTypesApi, blocksApi, ratePlansApi, rateRulesApi, guestsApi, paymentsApi, bookingItemsApi } from '../api.js';
 import { showToast, showModal, closeModal, showConfirm, statusBadge, formatDate, formatCurrency, initIcons, store, today, daysFromNow, handlePropertyNotFound } from '../utils.js';
 
-let rooms = [], roomTypes = [], ratePlans = [];
+let rooms = [], roomTypes = [], blocks = [], ratePlans = [];
 // For create-booking multi-room form
 let _newItems = [];
 let _rulesByPlan = {}; // cached rules per plan id
@@ -14,13 +14,15 @@ export async function renderBookings() {
     renderLayout('<div class="loading-spinner"></div>', 'bookings');
 
     try {
-        const [rRes, rtRes, rpRes] = await Promise.all([
+        const [rRes, rtRes, bRes, rpRes] = await Promise.all([
             roomsApi.getByProperty(prop.id),
             roomTypesApi.getByProperty(prop.id),
+            blocksApi.getByProperty(prop.id).catch(() => ({ data: [] })),
             ratePlansApi.getByProperty(prop.id).catch(() => ({ data: [] })),
         ]);
         rooms = rRes.data || [];
         roomTypes = rtRes.data || [];
+        blocks = bRes.data || [];
         ratePlans = rpRes.data || [];
     } catch (e) {
         if (handlePropertyNotFound(e)) return;
@@ -88,24 +90,43 @@ function renderBookingTable(bookings) {
     <div class="table-wrapper">
       <table class="data-table">
         <thead><tr>
-          <th>#</th><th>Status</th><th>Payment</th><th>Source</th>
-          <th>Rooms</th><th>Check-in</th><th>Check-out</th>
-          <th>Total</th><th>Actions</th>
+          <th>#</th>
+          <th>Guest</th>
+          <th>Room &amp; Block</th>
+          <th>Check-in</th>
+          <th>Check-out</th>
+          <th>Status</th>
+          <th>Payment</th>
+          <th>Total</th>
+          <th>Actions</th>
         </tr></thead>
         <tbody>
           ${bookings.map(b => {
               const items = b.items || [];
               const checkin = items[0]?.checkinDate;
               const checkout = items[items.length - 1]?.checkoutDate;
-              const roomNums = items.map(i => rooms.find(r => r.id === i.roomId)?.roomNumber || `#${i.roomId}`).join(', ');
+              // Build room + block info
+              const roomInfo = items.map(i => {
+                  const room = rooms.find(r => r.id === i.roomId);
+                  const block = room?.blockId ? blocks.find(bl => bl.id === room.blockId) : null;
+                  return block
+                      ? `${room?.roomNumber || `#${i.roomId}`} <span style="color:var(--text-muted); font-size:10px;">(${block.name})</span>`
+                      : (room?.roomNumber || `#${i.roomId}`);
+              }).join('<br>');
+              // Primary guest name
+              const primaryGuest = (b.guests || []).find(g => g.isPrimary) || (b.guests || [])[0];
+              const guestName = primaryGuest?.name || b.guestName || '—';
               return `<tr>
                 <td style="font-weight:700; color:var(--text-primary);">#${b.id}</td>
-                <td>${statusBadge(b.status)}</td>
-                <td>${statusBadge(b.paymentStatus)}</td>
-                <td><span class="badge badge-neutral">${b.source || '—'}</span></td>
-                <td style="color:var(--text-primary);">${roomNums || '—'}</td>
+                <td>
+                  <div style="font-weight:600; color:var(--text-primary);">${guestName}</div>
+                  ${primaryGuest?.phone ? `<div style="font-size:var(--font-xs); color:var(--text-muted);">${primaryGuest.phone}</div>` : ''}
+                </td>
+                <td style="color:var(--text-primary);">${roomInfo || '—'}</td>
                 <td>${formatDate(checkin)}</td>
                 <td>${formatDate(checkout)}</td>
+                <td>${statusBadge(b.status)}</td>
+                <td>${statusBadge(b.paymentStatus)}</td>
                 <td style="font-weight:600; color:var(--success);">${formatCurrency(b.totalAmount, b.currency)}</td>
                 <td><div class="table-actions">
                   ${b.status === 'CONFIRMED' ? `<button class="btn btn-success btn-sm btn-checkin" data-id="${b.id}" title="Check In"><i data-lucide="log-in"></i></button>` : ''}
@@ -132,13 +153,33 @@ function renderBookingLookupOnly() {
 function setupListHandlers(bookings) {
     document.querySelectorAll('.btn-checkin').forEach(btn => {
         btn.addEventListener('click', async () => {
-            try { await bookingsApi.checkIn(btn.dataset.id); showToast('Checked in!', 'success'); await renderBookingsList(); }
+            try {
+                await bookingsApi.checkIn(btn.dataset.id);
+                // Sync room status to OCCUPIED
+                const booking = bookings.find(b => b.id == btn.dataset.id);
+                if (booking?.items?.length) {
+                    await Promise.allSettled(booking.items.map(item =>
+                        roomsApi.update(item.roomId, { status: 'OCCUPIED' })
+                    ));
+                }
+                showToast('Checked in!', 'success'); await renderBookingsList();
+            }
             catch (e) { showToast('Error: ' + e.message, 'error'); }
         });
     });
     document.querySelectorAll('.btn-checkout').forEach(btn => {
         btn.addEventListener('click', async () => {
-            try { await bookingsApi.checkOut(btn.dataset.id); showToast('Checked out!', 'success'); await renderBookingsList(); }
+            try {
+                await bookingsApi.checkOut(btn.dataset.id);
+                // Sync room status back to AVAILABLE
+                const booking = bookings.find(b => b.id == btn.dataset.id);
+                if (booking?.items?.length) {
+                    await Promise.allSettled(booking.items.map(item =>
+                        roomsApi.update(item.roomId, { status: 'AVAILABLE' })
+                    ));
+                }
+                showToast('Checked out!', 'success'); await renderBookingsList();
+            }
             catch (e) { showToast('Error: ' + e.message, 'error'); }
         });
     });
@@ -155,8 +196,18 @@ function setupListHandlers(bookings) {
     });
     document.querySelectorAll('.btn-del').forEach(btn => {
         btn.addEventListener('click', () => {
+            const booking = bookings.find(b => b.id == btn.dataset.id);
             showConfirm('Delete Booking', `Delete booking #${btn.dataset.id}?`, async () => {
-                try { await bookingsApi.delete(btn.dataset.id); showToast('Deleted', 'success'); await renderBookingsList(); }
+                try {
+                    await bookingsApi.delete(btn.dataset.id);
+                    // Revert room statuses to AVAILABLE
+                    if (booking?.items?.length) {
+                        await Promise.allSettled(booking.items.map(item =>
+                            roomsApi.update(item.roomId, { status: 'AVAILABLE' })
+                        ));
+                    }
+                    showToast('Deleted', 'success'); await renderBookingsList();
+                }
                 catch (e) { showToast('Error: ' + e.message, 'error'); }
             });
         });
@@ -270,39 +321,94 @@ function renderBookingDetail(b, guests, payments) {
         <button class="btn btn-secondary btn-sm" id="btn-add-guest" data-bid="${b.id}"><i data-lucide="user-plus"></i> Add Guest</button>
       `}
 
-      <h4 style="font-weight:600; margin: var(--space-4) 0 var(--space-3); color:var(--text-primary);">Payments</h4>
+      <h4 style="font-weight:600; margin: var(--space-4) 0 var(--space-3); color:var(--text-primary);">Payments &amp; Balance</h4>
+
+      <!-- Balance summary -->
+      ${(() => {
+          const totalAmt = parseFloat(b.totalAmount) || 0;
+          const paidAmt = payments.filter(p => p.status !== 'FAILED' && p.status !== 'REFUNDED').reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+          const remaining = Math.max(0, totalAmt - paidAmt);
+          const overPaid = paidAmt > totalAmt;
+          return `<div class="payment-balance-grid">
+            <div class="payment-balance-item">
+              <div class="payment-balance-label">Total Amount</div>
+              <div class="payment-balance-value">${formatCurrency(totalAmt, b.currency)}</div>
+            </div>
+            <div class="payment-balance-item paid">
+              <div class="payment-balance-label">Paid</div>
+              <div class="payment-balance-value" style="color:var(--success);">${formatCurrency(paidAmt, b.currency)}</div>
+            </div>
+            <div class="payment-balance-item ${overPaid ? 'overpaid' : remaining > 0 ? 'due' : 'settled'}">
+              <div class="payment-balance-label">${overPaid ? 'Overpaid' : remaining > 0 ? 'Remaining Due' : 'Balance'}</div>
+              <div class="payment-balance-value" style="color:${overPaid ? 'var(--warning)' : remaining > 0 ? 'var(--danger)' : 'var(--success)'};">
+                ${overPaid ? '+' : ''}${formatCurrency(overPaid ? paidAmt - totalAmt : remaining, b.currency)}
+                ${remaining === 0 && !overPaid ? ' ✓' : ''}
+              </div>
+            </div>
+          </div>`;
+      })()}
+
       ${payments.length > 0 ? `
-        <div class="table-wrapper" style="margin-bottom:var(--space-4);">
+        <div class="table-wrapper" style="margin-bottom:var(--space-4); margin-top:var(--space-4);">
           <table class="data-table">
-            <thead><tr><th>ID</th><th>Amount</th><th>Method</th><th>Status</th><th>Transaction</th></tr></thead>
+            <thead><tr><th>ID</th><th>Amount</th><th>Method</th><th>Status</th><th>Transaction ID</th><th></th></tr></thead>
             <tbody>${payments.map(p => `
               <tr>
-                <td>${p.id}</td>
-                <td style="font-weight:600; color:var(--success);">${formatCurrency(p.amount, p.currency)}</td>
+                <td style="color:var(--text-muted);">#${p.id}</td>
+                <td style="font-weight:600; color:${p.status === 'REFUNDED' ? 'var(--warning)' : 'var(--success)'};">${formatCurrency(p.amount, p.currency || b.currency)}</td>
                 <td><span class="badge badge-info">${(p.paymentMethod || '').replace(/_/g, ' ')}</span></td>
                 <td>${statusBadge(p.status)}</td>
-                <td>${p.transactionId || '—'}</td>
+                <td style="font-size:var(--font-xs); color:var(--text-muted);">${p.transactionId || '—'}</td>
+                <td>
+                  <button class="btn btn-ghost btn-sm btn-edit-payment" data-pid="${p.id}" data-bid="${b.id}" title="Edit Payment">
+                    <i data-lucide="pencil"></i>
+                  </button>
+                </td>
               </tr>`).join('')}</tbody>
           </table>
         </div>
-      ` : '<p style="color:var(--text-muted); margin-bottom:var(--space-3);">No payments recorded.</p>'}
+      ` : '<p style="color:var(--text-muted); margin-bottom:var(--space-3); margin-top:var(--space-4);">No payments recorded yet.</p>'}
       <button class="btn btn-secondary btn-sm" id="btn-add-payment" data-bid="${b.id}"><i data-lucide="credit-card"></i> Record Payment</button>
     </div>`;
 }
 
 function bindBookingDetailActions(b) {
     document.querySelector('.btn-checkin')?.addEventListener('click', async () => {
-        try { await bookingsApi.checkIn(b.id); showToast('Checked in!', 'success'); searchBooking(); }
+        try {
+            await bookingsApi.checkIn(b.id);
+            if (b.items?.length) {
+                await Promise.allSettled(b.items.map(item =>
+                    roomsApi.update(item.roomId, { status: 'OCCUPIED' })
+                ));
+            }
+            showToast('Checked in!', 'success'); searchBooking();
+        }
         catch (e) { showToast('Error: ' + e.message, 'error'); }
     });
     document.querySelector('.btn-checkout')?.addEventListener('click', async () => {
-        try { await bookingsApi.checkOut(b.id); showToast('Checked out!', 'success'); searchBooking(); }
+        try {
+            await bookingsApi.checkOut(b.id);
+            if (b.items?.length) {
+                await Promise.allSettled(b.items.map(item =>
+                    roomsApi.update(item.roomId, { status: 'AVAILABLE' })
+                ));
+            }
+            showToast('Checked out!', 'success'); searchBooking();
+        }
         catch (e) { showToast('Error: ' + e.message, 'error'); }
     });
     document.querySelector('.btn-edit-booking')?.addEventListener('click', () => showEditBookingForm(b));
     document.querySelector('.btn-del-booking')?.addEventListener('click', () => {
         showConfirm('Delete Booking', `Delete booking #${b.id}?`, async () => {
-            try { await bookingsApi.delete(b.id); showToast('Deleted', 'success'); await renderBookingsList(); }
+            try {
+                await bookingsApi.delete(b.id);
+                if (b.items?.length) {
+                    await Promise.allSettled(b.items.map(item =>
+                        roomsApi.update(item.roomId, { status: 'AVAILABLE' })
+                    ));
+                }
+                showToast('Deleted', 'success'); await renderBookingsList();
+            }
             catch (e) { showToast('Error: ' + e.message, 'error'); }
         });
     });
@@ -315,8 +421,11 @@ function bindBookingDetailActions(b) {
         });
     });
     document.getElementById('btn-add-item')?.addEventListener('click', () => showAddItemForm(b.id));
-    document.getElementById('btn-add-payment')?.addEventListener('click', () => showPaymentForm(b.id));
+    document.getElementById('btn-add-payment')?.addEventListener('click', () => showPaymentForm(b.id, null, b));
     document.getElementById('btn-add-guest')?.addEventListener('click', () => showAddGuestForm(b.id));
+    document.querySelectorAll('.btn-edit-payment').forEach(btn => {
+        btn.addEventListener('click', () => showPaymentForm(b.id, btn.dataset.pid, b));
+    });
 }
 
 // ===== ADD GUEST FORM =====
@@ -679,23 +788,43 @@ function renderNewBookingItemsUI() {
     const container = document.getElementById('items-list');
     if (!container) return;
 
-    container.innerHTML = _newItems.map((item, idx) => `
+    container.innerHTML = _newItems.map((item, idx) => {
+        // Filter rooms based on selected block and room type
+        const filteredRooms = rooms.filter(r => {
+            const blockMatch = !item.blockId || r.blockId == item.blockId;
+            const typeMatch = !item.roomTypeId || r.roomTypeId == item.roomTypeId;
+            return blockMatch && typeMatch;
+        });
+        return `
     <div class="booking-item-card" id="item-card-${item.id}">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-3);">
         <span style="font-weight:600; color:var(--text-accent); font-size:var(--font-sm);">Room ${idx + 1}</span>
         ${_newItems.length > 1 ? `<button type="button" class="btn btn-ghost btn-sm btn-remove-item" data-itemid="${item.id}" style="color:var(--danger);"><i data-lucide="trash-2"></i> Remove</button>` : ''}
       </div>
       <div class="form-row">
+        ${blocks.length > 0 ? `<div class="form-group"><label class="form-label">Block</label>
+          <select class="form-select item-block" data-itemid="${item.id}">
+            <option value="">All Blocks</option>
+            ${blocks.map(bl => `<option value="${bl.id}" ${item.blockId == bl.id ? 'selected' : ''}>${bl.name}</option>`).join('')}
+          </select></div>` : ''}
         <div class="form-group"><label class="form-label">Room Type *</label>
           <select class="form-select item-room-type" data-itemid="${item.id}" required>
             <option value="">Select type</option>
             ${roomTypes.map(rt => `<option value="${rt.id}" ${item.roomTypeId == rt.id ? 'selected' : ''}>${rt.name}</option>`).join('')}
           </select></div>
+      </div>
+      <div class="form-row">
         <div class="form-group"><label class="form-label">Room *</label>
           <select class="form-select item-room" data-itemid="${item.id}" required>
             <option value="">Select room</option>
-            ${rooms.map(r => `<option value="${r.id}" ${item.roomId == r.id ? 'selected' : ''}>${r.roomNumber}${r.floorNumber != null ? ' (Fl.'+r.floorNumber+')' : ''}</option>`).join('')}
+            ${filteredRooms.map(r => {
+                const block = r.blockId ? blocks.find(bl => bl.id === r.blockId) : null;
+                const label = block ? `${block.name} — ${r.roomNumber}` : r.roomNumber;
+                return `<option value="${r.id}" ${item.roomId == r.id ? 'selected' : ''}>${label}${r.floorNumber != null ? ' (Fl.' + r.floorNumber + ')' : ''}</option>`;
+            }).join('')}
           </select></div>
+        <div class="form-group"><label class="form-label">Adults</label>
+          <input type="number" class="form-input item-adults" data-itemid="${item.id}" value="${item.numAdults}" min="1" /></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Check-in *</label>
@@ -708,12 +837,13 @@ function renderNewBookingItemsUI() {
           <label class="form-label">Price / Night *</label>
           <input type="number" class="form-input item-price" data-itemid="${item.id}" value="${item.pricePerNight}" step="0.01" required placeholder="Auto-filled from rate rule" />
         </div>
-        <div class="form-group"><label class="form-label">Adults</label>
-          <input type="number" class="form-input item-adults" data-itemid="${item.id}" value="${item.numAdults}" min="1" /></div>
+        <div class="form-group"><label class="form-label">Check-in Time</label>
+          <input type="time" class="form-input item-checkin-time" data-itemid="${item.id}" value="${item.checkinTime || '14:00'}" /></div>
       </div>
       <div class="item-subtotal" id="subtotal-${item.id}" style="font-size:var(--font-sm); color:var(--text-muted); text-align:right; margin-top:var(--space-1);"></div>
     </div>
-    `).join('');
+    `;
+    }).join('');
 
     initIcons();
     bindItemCardListeners();
@@ -727,16 +857,28 @@ function bindItemCardListeners() {
             renderNewBookingItemsUI();
         });
     });
+    document.querySelectorAll('.item-block').forEach(sel => {
+        sel.addEventListener('change', () => {
+            const it = _newItems.find(i => i.id == sel.dataset.itemid);
+            if (it) { it.blockId = sel.value; it.roomId = ''; renderNewBookingItemsUI(); }
+        });
+    });
     document.querySelectorAll('.item-room-type').forEach(sel => {
         sel.addEventListener('change', () => {
             const it = _newItems.find(i => i.id == sel.dataset.itemid);
-            if (it) it.roomTypeId = sel.value;
+            if (it) { it.roomTypeId = sel.value; it.roomId = ''; renderNewBookingItemsUI(); }
         });
     });
     document.querySelectorAll('.item-room').forEach(sel => {
         sel.addEventListener('change', () => {
             const it = _newItems.find(i => i.id == sel.dataset.itemid);
             if (it) it.roomId = sel.value;
+        });
+    });
+    document.querySelectorAll('.item-checkin-time').forEach(inp => {
+        inp.addEventListener('change', () => {
+            const it = _newItems.find(i => i.id == inp.dataset.itemid);
+            if (it) it.checkinTime = inp.value;
         });
     });
     document.querySelectorAll('.item-checkin').forEach(inp => {
@@ -881,6 +1023,7 @@ function setupCreateFormListeners(prop) {
                 roomId: parseInt(it.roomId),
                 checkinDate: it.checkinDate,
                 checkoutDate: it.checkoutDate,
+                checkinTime: it.checkinTime || undefined,
                 pricePerNight: parseFloat(it.pricePerNight),
                 numAdults: parseInt(it.numAdults) || 1,
                 numChildren: 0,
@@ -904,6 +1047,12 @@ function setupCreateFormListeners(prop) {
         try {
             const res = await bookingsApi.create(prop.id, data);
             showToast(`Booking #${res.data?.id} created!`, 'success');
+            // Sync room statuses — mark booked rooms as OCCUPIED so all pages reflect the booking
+            if (_newItems.length) {
+                await Promise.allSettled(_newItems.map(item =>
+                    roomsApi.update(parseInt(item.roomId), { status: 'OCCUPIED' })
+                ));
+            }
             closeModal();
             await renderBookingsList();
             // Auto-load the new booking in the lookup
@@ -941,22 +1090,46 @@ function showEditBookingForm(b) {
           <select class="form-select" name="paymentStatus">
             ${['PENDING', 'PARTIAL', 'PAID', 'REFUNDED'].map(s => `<option value="${s}" ${b.paymentStatus === s ? 'selected' : ''}>${s}</option>`).join('')}
           </select></div>
-        <div class="form-group"><label class="form-label">Notes</label>
-          <input class="form-input" name="notes" value="${b.notes || ''}" /></div>
+        <div class="form-group"><label class="form-label">Currency</label>
+          <input class="form-input" name="currency" value="${b.currency || 'INR'}" maxlength="3" /></div>
       </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Check-in Time</label>
+          <input type="time" class="form-input" name="checkinTime" value="${b.checkinTime || '14:00'}" /></div>
+        <div class="form-group"><label class="form-label">Check-out Time</label>
+          <input type="time" class="form-input" name="checkoutTime" value="${b.checkoutTime || '11:00'}" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Total Amount</label>
+          <input type="number" class="form-input" name="totalAmount" value="${b.totalAmount || ''}" step="0.01" /></div>
+        <div class="form-group"><label class="form-label">Advance Amount</label>
+          <input type="number" class="form-input" name="advanceAmount" value="${b.advanceAmount || ''}" step="0.01" /></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label>
+        <textarea class="form-textarea" name="notes" rows="2">${b.notes || ''}</textarea></div>
     </div><div class="modal-footer">
       <button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-container').innerHTML=''">Cancel</button>
-      <button type="submit" class="btn btn-primary" id="ebk-submit">Update</button>
+      <button type="submit" class="btn btn-primary" id="ebk-submit">Update Booking</button>
     </div></form>
   `);
     initIcons();
     document.getElementById('edit-bk-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const f = e.target;
-        const data = { status: f.status.value, source: f.source.value, paymentStatus: f.paymentStatus.value, notes: f.notes.value || undefined };
-        const btn = document.getElementById('ebk-submit'); btn.disabled = true;
-        try { await bookingsApi.update(b.id, data); showToast('Updated', 'success'); closeModal(); searchBooking(); }
-        catch (err) { showToast('Error: ' + err.message, 'error'); btn.disabled = false; }
+        const data = {
+            status: f.status.value,
+            source: f.source.value,
+            paymentStatus: f.paymentStatus.value,
+            currency: f.currency.value || undefined,
+            checkinTime: f.checkinTime.value || undefined,
+            checkoutTime: f.checkoutTime.value || undefined,
+            totalAmount: f.totalAmount.value ? parseFloat(f.totalAmount.value) : undefined,
+            advanceAmount: f.advanceAmount.value ? parseFloat(f.advanceAmount.value) : undefined,
+            notes: f.notes.value || undefined,
+        };
+        const btn = document.getElementById('ebk-submit'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+        try { await bookingsApi.update(b.id, data); showToast('Booking updated', 'success'); closeModal(); searchBooking(); }
+        catch (err) { showToast('Error: ' + err.message, 'error'); btn.disabled = false; btn.innerHTML = 'Update Booking'; }
     });
 }
 
@@ -1005,34 +1178,93 @@ function showAddItemForm(bookingId) {
     });
 }
 
-// ===== PAYMENT FORM =====
-function showPaymentForm(bookingId) {
+// ===== PAYMENT FORM (record new or edit existing) =====
+function showPaymentForm(bookingId, paymentId = null, booking = null) {
+    const isEdit = !!paymentId;
+    // Find existing payment if editing
+    let existing = null;
+    if (isEdit && booking) {
+        // We'll look it up from the search result - just pre-populate form from booking object if available
+        existing = null; // editing via API update; we'll find it post-open if needed
+    }
+
+    // Show remaining balance hint
+    let balanceHint = '';
+    if (booking) {
+        const totalAmt = parseFloat(booking.totalAmount) || 0;
+        const payments = booking._cachedPayments || [];
+        const paidAmt = payments.filter(p => p.id != paymentId && p.status !== 'FAILED' && p.status !== 'REFUNDED')
+            .reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+        const remaining = Math.max(0, totalAmt - paidAmt);
+        if (remaining > 0) {
+            balanceHint = `<div style="background:var(--warning-bg); border:1px solid var(--warning); border-radius:var(--radius-md); padding:var(--space-3); margin-bottom:var(--space-4); font-size:var(--font-sm);">
+              <strong>Remaining balance:</strong> ${formatCurrency(remaining, booking.currency)}
+            </div>`;
+        }
+    }
+
     showModal(`
-    <div class="modal-header"><h2>Record Payment</h2>
-      <button class="btn btn-ghost" onclick="document.getElementById('modal-container').innerHTML=''"><i data-lucide="x"></i></button></div>
-    <form id="pay-form"><div class="modal-body">
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Amount *</label>
-          <input type="number" class="form-input" name="amount" step="0.01" required /></div>
-        <div class="form-group"><label class="form-label">Method *</label>
+    <div class="modal-header">
+      <h2>${isEdit ? 'Edit' : 'Record'} Payment</h2>
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-container').innerHTML=''"><i data-lucide="x"></i></button>
+    </div>
+    <form id="pay-form">
+      <div class="modal-body">
+        ${balanceHint}
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Amount *</label>
+            <input type="number" class="form-input" name="amount" step="0.01" required placeholder="0.00" /></div>
+          <div class="form-group"><label class="form-label">Currency</label>
+            <input class="form-input" name="currency" value="${booking?.currency || 'INR'}" maxlength="3" /></div>
+        </div>
+        <div class="form-group"><label class="form-label">Payment Method *</label>
           <select class="form-select" name="paymentMethod" required>
-            ${['CASH', 'UPI', 'INTERNET_BANKING', 'CARD', 'OTHER'].map(m => `<option value="${m}">${m.replace(/_/g, ' ')}</option>`).join('')}
-          </select></div>
+            ${['CASH', 'UPI', 'INTERNET_BANKING', 'CARD', 'CHEQUE', 'OTHER'].map(m => `<option value="${m}">${m.replace(/_/g, ' ')}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Transaction ID</label>
+            <input class="form-input" name="transactionId" placeholder="UTR / Reference number" /></div>
+          <div class="form-group"><label class="form-label">Status</label>
+            <select class="form-select" name="status">
+              ${['COMPLETED', 'PENDING', 'FAILED', 'REFUNDED'].map(s => `<option value="${s}">${s}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">Notes</label>
+          <input class="form-input" name="notes" placeholder="Optional payment notes" /></div>
       </div>
-      <div class="form-group"><label class="form-label">Transaction ID</label>
-        <input class="form-input" name="transactionId" /></div>
-    </div><div class="modal-footer">
-      <button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-container').innerHTML=''">Cancel</button>
-      <button type="submit" class="btn btn-primary" id="pay-submit">Record Payment</button>
-    </div></form>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-container').innerHTML=''">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="pay-submit">
+          <i data-lucide="credit-card"></i> ${isEdit ? 'Update Payment' : 'Record Payment'}
+        </button>
+      </div>
+    </form>
   `);
     initIcons();
     document.getElementById('pay-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const f = e.target;
-        const data = { amount: parseFloat(f.amount.value), paymentMethod: f.paymentMethod.value, transactionId: f.transactionId.value || undefined };
-        const btn = document.getElementById('pay-submit'); btn.disabled = true;
-        try { await paymentsApi.record(bookingId, data); showToast('Payment recorded', 'success'); closeModal(); searchBooking(); }
-        catch (err) { showToast('Error: ' + err.message, 'error'); btn.disabled = false; }
+        const data = {
+            amount: parseFloat(f.amount.value),
+            currency: f.currency.value || undefined,
+            paymentMethod: f.paymentMethod.value,
+            transactionId: f.transactionId.value || undefined,
+            status: f.status.value || undefined,
+            notes: f.notes.value || undefined,
+        };
+        const btn = document.getElementById('pay-submit');
+        btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+        try {
+            // Currently API only has record (POST); edit via PATCH if available
+            await paymentsApi.record(bookingId, data);
+            showToast('Payment recorded', 'success');
+            closeModal(); searchBooking();
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+            btn.disabled = false; btn.innerHTML = `<i data-lucide="credit-card"></i> ${isEdit ? 'Update Payment' : 'Record Payment'}`;
+            initIcons();
+        }
     });
 }

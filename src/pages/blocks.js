@@ -25,8 +25,23 @@ async function loadData() {
 
 function renderList() {
     document.getElementById('page-content').innerHTML = `
+    <!-- Property Setup Guide -->
+    <div class="setup-flow-banner">
+      <div class="setup-flow-title"><i data-lucide="map" style="width:16px;height:16px;margin-right:6px;"></i> Property Setup Flow</div>
+      <div class="setup-flow-steps">
+        <a href="#/blocks" class="setup-flow-step active"><span class="setup-flow-num">1</span><span>Add Blocks</span></a>
+        <span class="setup-flow-arrow">›</span>
+        <a href="#/room-types" class="setup-flow-step"><span class="setup-flow-num">2</span><span>Room Categories</span></a>
+        <span class="setup-flow-arrow">›</span>
+        <a href="#/rooms" class="setup-flow-step"><span class="setup-flow-num">3</span><span>Add Rooms</span></a>
+      </div>
+    </div>
+
     <div class="page-header">
-      <div class="page-header-left"><h1>Property Blocks</h1><p>Manage building blocks/wings</p></div>
+      <div class="page-header-left">
+        <h1>Property Blocks</h1>
+        <p>Step 1: Create blocks (wings/buildings) before adding rooms</p>
+      </div>
       <button class="btn btn-primary" id="btn-add"><i data-lucide="plus"></i> Add Block</button>
     </div>
     ${blocks.length > 0 ? `
