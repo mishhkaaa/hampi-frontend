@@ -1,9 +1,9 @@
 // ===== GUESTS PAGE =====
 import { renderLayout } from '../layout.js';
-import { bookingsApi, guestsApi } from '../api.js';
+import { bookingsApi, guestsApi, selfCheckinApi } from '../api.js';
 import { showToast, showModal, closeModal, showConfirm, statusBadge, formatDate, initIcons, store, handlePropertyNotFound } from '../utils.js';
 
-const BASE_URL = 'https://sohraa-hms-production-803b.up.railway.app';
+const BASE_URL = 'https://hmsapi.sohraa.com';
 
 let _bookings = [];
 
@@ -21,13 +21,18 @@ async function loadGuests() {
 
     try {
         const res = await bookingsApi.getByProperty(prop.id);
-        _bookings = res.data || [];
+        _bookings = Array.isArray(res.data) ? res.data : [];
     } catch (e) {
         if (handlePropertyNotFound(e)) return;
         _bookings = [];
     }
 
-    renderGuestList();
+    try {
+        renderGuestList();
+    } catch (err) {
+        const errPc = document.getElementById('page-content');
+        if (errPc) errPc.innerHTML = `<div class="empty-state"><p style="color:var(--danger);">Failed to render guests: ${err.message}</p></div>`;
+    }
 }
 
 function renderGuestList() {
@@ -189,11 +194,27 @@ function renderGuestList() {
         });
     });
 
-    // QR generation
-    document.getElementById('btn-gen-qr')?.addEventListener('click', () => {
+    // QR generation — tries token endpoint first, falls back to bookingId mode
+    document.getElementById('btn-gen-qr')?.addEventListener('click', async () => {
         const bid = document.getElementById('qr-booking-id').value.trim();
         if (!bid) { showToast('Enter a booking ID first', 'error'); return; }
-        generateCheckinQR(bid, checkinBase);
+        const btn = document.getElementById('btn-gen-qr');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Generating…';
+        let checkinUrl;
+        try {
+            const res = await selfCheckinApi.generateToken(parseInt(bid));
+            const token = res?.data?.token || res?.token;
+            checkinUrl = token
+                ? `${checkinBase}?token=${encodeURIComponent(token)}`
+                : `${checkinBase}?bookingId=${bid}`;
+        } catch (_e) {
+            checkinUrl = `${checkinBase}?bookingId=${bid}`;
+        }
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="qr-code"></i> Generate QR';
+        initIcons();
+        generateCheckinQR(bid, checkinUrl);
     });
 
     // Copy link
@@ -222,12 +243,11 @@ function renderGuestList() {
     });
 }
 
-function generateCheckinQR(bookingId, checkinBase) {
-    const url = `${checkinBase}?bookingId=${bookingId}`;
-    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=0c4a6e&margin=10`;
+function generateCheckinQR(bookingId, checkinUrl) {
+    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(checkinUrl)}&bgcolor=ffffff&color=0c4a6e&margin=10`;
 
     document.getElementById('qr-booking-label').textContent = `#${bookingId}`;
-    document.getElementById('qr-link-input').value = url;
+    document.getElementById('qr-link-input').value = checkinUrl;
     document.getElementById('qr-image-box').innerHTML = `
       <img src="${qrApiUrl}" alt="QR Code" style="width:180px; height:180px; border-radius:12px; border:2px solid rgba(14,165,233,0.2);"
            onerror="this.parentElement.innerHTML='<div style=\\'padding:12px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; font-size:12px; color:#0284c7;\\'>QR image unavailable offline.<br/>Share the link directly.</div>'" />

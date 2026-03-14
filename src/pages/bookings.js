@@ -20,10 +20,10 @@ export async function renderBookings() {
             blocksApi.getByProperty(prop.id).catch(() => ({ data: [] })),
             ratePlansApi.getByProperty(prop.id).catch(() => ({ data: [] })),
         ]);
-        rooms = rRes.data || [];
-        roomTypes = rtRes.data || [];
-        blocks = bRes.data || [];
-        ratePlans = rpRes.data || [];
+        rooms = Array.isArray(rRes.data) ? rRes.data : [];
+        roomTypes = Array.isArray(rtRes.data) ? rtRes.data : [];
+        blocks = Array.isArray(bRes.data) ? bRes.data : [];
+        ratePlans = Array.isArray(rpRes.data) ? rpRes.data : [];
     } catch (e) {
         if (handlePropertyNotFound(e)) return;
     }
@@ -42,11 +42,12 @@ async function renderBookingsList() {
 
     try {
         const res = await bookingsApi.getByProperty(prop.id);
-        bookings = res.data || [];
+        bookings = Array.isArray(res.data) ? res.data : [];
     } catch (e) {
         listAvailable = false;
     }
 
+    try {
     pc.innerHTML = `
     <div class="page-header">
       <div class="page-header-left"><h1>Bookings</h1><p>Manage reservations for ${prop.name}</p></div>
@@ -69,6 +70,10 @@ async function renderBookingsList() {
       <div id="booking-result" style="margin-top: var(--space-6);"></div>
     </div>
     `;
+    } catch (err) {
+        pc.innerHTML = `<div class="empty-state"><p style="color:var(--danger);">Failed to render bookings: ${err.message}</p></div>`;
+        return;
+    }
     initIcons();
 
     document.getElementById('btn-create')?.addEventListener('click', showCreateBookingForm);

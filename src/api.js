@@ -1,8 +1,10 @@
 // ===== API SERVICE =====
-const BASE_URL = 'https://sohraa-hms-production-803b.up.railway.app';
+const BASE_URL = 'https://hmsapi.sohraa.com';
 
 async function request(path, options = {}) {
   const url = `${BASE_URL}${path}`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
   const config = {
     credentials: 'include', // Important for cookie-based auth
     headers: {
@@ -10,13 +12,22 @@ async function request(path, options = {}) {
       ...options.headers,
     },
     ...options,
+    signal: controller.signal,
   };
 
   if (config.body && typeof config.body === 'object') {
     config.body = JSON.stringify(config.body);
   }
 
-  const response = await fetch(url, config);
+  let response;
+  try {
+    response = await fetch(url, config);
+    clearTimeout(timeoutId);
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') throw new ApiError(408, 'Request timed out');
+    throw err;
+  }
 
   if (response.status === 401) {
     // Try to refresh token
@@ -56,10 +67,14 @@ class ApiError extends Error {
 
 async function refreshToken() {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
     const res = await fetch(`${BASE_URL}/auth/refresh`, {
       method: 'POST',
       credentials: 'include',
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
     return res.ok;
   } catch {
     return false;
@@ -238,15 +253,26 @@ export const pricingConfigApi = {
 // ===== PUBLIC REQUEST (no auth redirect, for unauthenticated endpoints) =====
 async function publicRequest(path, options = {}) {
   const url = `${BASE_URL}${path}`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
   const config = {
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...options.headers },
     ...options,
+    signal: controller.signal,
   };
   if (config.body && typeof config.body === 'object') {
     config.body = JSON.stringify(config.body);
   }
-  const response = await fetch(url, config);
+  let response;
+  try {
+    response = await fetch(url, config);
+    clearTimeout(timeoutId);
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') throw new Error('Request timed out');
+    throw err;
+  }
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
     throw new Error(err.error?.message || `HTTP ${response.status}`);

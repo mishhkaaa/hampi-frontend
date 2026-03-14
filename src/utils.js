@@ -225,6 +225,9 @@ export function handlePropertyNotFound(err) {
         (err?.message || '').toLowerCase().includes('property not found') ||
         (err?.message || '').toLowerCase().includes('not found');
     if (isNotFound) {
+        // Clear spinner immediately so it doesn't persist during the redirect
+        const pc = document.getElementById('page-content');
+        if (pc) pc.innerHTML = '';
         store.setState({ currentProperty: null });
         showToast('Property not found — please re-select a property.', 'error');
         window.location.hash = '#/properties';

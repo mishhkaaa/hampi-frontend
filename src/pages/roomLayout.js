@@ -18,13 +18,13 @@ export async function renderRoomLayout() {
             roomTypesApi.getByProperty(prop.id),
             blocksApi.getByProperty(prop.id).catch(() => ({ data: [] })),
         ]);
-        rooms = rRes.data || [];
-        roomTypes = rtRes.data || [];
-        blocks = bRes.data || [];
+        rooms = Array.isArray(rRes.data) ? rRes.data : [];
+        roomTypes = Array.isArray(rtRes.data) ? rtRes.data : [];
+        blocks = Array.isArray(bRes.data) ? bRes.data : [];
 
         try {
             const bkRes = await bookingsApi.getByProperty(prop.id);
-            bookings = bkRes.data || [];
+            bookings = Array.isArray(bkRes.data) ? bkRes.data : [];
         } catch (e) { bookings = []; }
     } catch (err) {
         showToast('Error loading layout: ' + err.message, 'error');
@@ -32,7 +32,12 @@ export async function renderRoomLayout() {
 
     selectedBlock = null;
     selectedFloor = null;
-    renderLayoutPage();
+    try {
+        renderLayoutPage();
+    } catch (err) {
+        const pc = document.getElementById('page-content');
+        if (pc) pc.innerHTML = `<div class="empty-state"><p style="color:var(--danger);">Failed to render layout: ${err.message}</p></div>`;
+    }
 }
 
 // Build room → active booking map

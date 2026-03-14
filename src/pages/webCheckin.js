@@ -6,7 +6,7 @@
 import { selfCheckinApi } from '../api.js';
 import { showToast, initIcons } from '../utils.js';
 
-const BASE_URL = 'https://sohraa-hms-production-803b.up.railway.app';
+const BASE_URL = 'https://hmsapi.sohraa.com';
 
 export function renderWebCheckin() {
     const app = document.getElementById('app');

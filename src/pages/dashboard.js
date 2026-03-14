@@ -15,8 +15,8 @@ export async function renderDashboard() {
             propertiesApi.getAll(),
             usersApi.getAll().catch(() => ({ data: [] })),
         ]);
-        properties = propRes.data || [];
-        users = usersRes.data || [];
+        properties = Array.isArray(propRes.data) ? propRes.data : [];
+        users = Array.isArray(usersRes.data) ? usersRes.data : [];
 
         // Validate cached property against fetched list — fix stale IDs from localStorage
         const validProp = properties.find(p => p.id === prop?.id);
@@ -31,14 +31,14 @@ export async function renderDashboard() {
                 roomTypesApi.getByProperty(activeProp.id).catch(() => ({ data: [] })),
                 blocksApi.getByProperty(activeProp.id).catch(() => ({ data: [] })),
             ]);
-            rooms = roomsRes.data || [];
-            roomTypes = rtRes.data || [];
-            blocks = blocksRes.data || [];
+            rooms = Array.isArray(roomsRes.data) ? roomsRes.data : [];
+            roomTypes = Array.isArray(rtRes.data) ? rtRes.data : [];
+            blocks = Array.isArray(blocksRes.data) ? blocksRes.data : [];
 
             // Try to load bookings for room card info
             try {
                 const bkRes = await bookingsApi.getByProperty(activeProp.id);
-                bookings = bkRes.data || [];
+                bookings = Array.isArray(bkRes.data) ? bkRes.data : [];
             } catch (e) { bookings = []; }
         }
     } catch (err) {
@@ -288,7 +288,12 @@ export async function renderDashboard() {
     </div>
   `;
 
-    document.getElementById('page-content').innerHTML = content;
+    try {
+        document.getElementById('page-content').innerHTML = content;
+    } catch (err) {
+        document.getElementById('page-content').innerHTML = `<div class="empty-state"><p style="color:var(--danger);">Failed to render dashboard: ${err.message}</p></div>`;
+        return;
+    }
     initIcons();
 
     // Property switcher
